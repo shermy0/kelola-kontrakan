@@ -8,7 +8,7 @@ class Penyewa extends Model
 {
     protected $table = 'penyewa';
     protected $primaryKey = 'id_penyewa';
-    protected $fillable = ['nama_lengkap', 'no_telepon', 'nik', 'alamat'];
+    protected $fillable = ['id_penyewa', 'nama_lengkap', 'no_telepon', 'nik', 'alamat'];
 
     public function sewa()
     {

@@ -36,9 +36,18 @@ class DashboardController extends Controller
 public function penyewa()
 {
     $userId = auth()->id();
-    
-    // Kontrakan kosong
-    $kontrakanKosong = Kontrakan::where('status', 'kosong')->paginate(5);
+
+    // Ambil keyword search
+    $search = request('search');
+
+    // Query kontrakan kosong, dengan filter search
+    $kontrakanKosong = Kontrakan::where('status', 'kosong')
+        ->when($search, function($query, $search) {
+            $query->where('nomor_unit', 'like', "%{$search}%")
+                  ->orWhere('keterangan', 'like', "%{$search}%");
+        })
+        ->paginate(5)
+        ->withQueryString(); // Supaya pagination tetap membawa query search
 
     // Data sewa penyewa yang login
     $penyewa = Penyewa::where('id_penyewa', $userId)->first();
@@ -49,5 +58,6 @@ public function penyewa()
 
     return view('dashboard_penyewa', compact('kontrakanKosong', 'sewaSaya'));
 }
+
 
 }

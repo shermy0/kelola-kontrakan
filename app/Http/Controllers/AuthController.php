@@ -75,7 +75,7 @@ public function register(Request $request)
     ]);
 
     // Buat user baru
-    $user = User::create([
+    $users = User::create([
         'name'     => $request->name,
         'email'    => $request->email,
         'password' => Hash::make($request->password),
@@ -84,15 +84,15 @@ public function register(Request $request)
 
     // Buat data di tabel penyewa
     Penyewa::create([
-        'id_penyewa'   => $user->id,       // id user sama dengan id_penyewa
-        'nama_lengkap' => $user->name,
+        'id_penyewa'   => $users->id,
+        'nama_lengkap' => $users->name,
         // bisa tambahkan default no_telepon, NIK, alamat kosong
     ]);
 
     // Login otomatis
-    Auth::login($user);
+    Auth::login($users);
 
-    return redirect()->route('dashboard_penyewa');
+    return redirect()->route('dashboard.penyewa');
 }
 
 

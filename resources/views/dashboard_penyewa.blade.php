@@ -19,10 +19,19 @@
     <h2>Dashboard Penyewa</h2>
 <h4>Selamat datang, {{ auth()->user()->name }}!</h6>
     <h4>Kontrakan Tersedia</h4>
+    <form action="{{ route('dashboard.penyewa') }}" method="GET" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="search" class="form-control" placeholder="Cari nomor unit atau keterangan..." value="{{ request('search') }}">
+        <button class="btn btn-primary" type="submit">Cari</button>
+    </div>
+</form>
+
     <div class="card mb-4">
+        
         <div class="card-body">
             <table class="table table-bordered table-striped">
                 <thead>
+                    
                     <tr>
                         <th>No</th>
                         <th>Nomor Unit</th>
