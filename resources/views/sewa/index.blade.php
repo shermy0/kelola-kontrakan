@@ -9,7 +9,7 @@
         + Tambah Sewa
     </button>
 
-    <!-- ✅ Alert -->
+    <!-- ✅ Alerts -->
     @if($errors->any())
         <div class="alert alert-danger">
             <strong>Terjadi kesalahan:</strong>
@@ -20,11 +20,9 @@
             </ul>
         </div>
     @endif
-
     @if(session('error'))
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
-
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -62,13 +60,33 @@
                         <td>{{ $s->tgl_mulai }}</td>
                         <td>{{ $s->tgl_selesai ?? '-' }}</td>
                         <td>
-                            <span class="badge {{ $s->status_sewa == 'aktif' ? 'bg-success' : 'bg-secondary' }}">
+                            @php
+                                $statusClass = match($s->status_sewa) {
+                                    'aktif' => 'bg-success',
+                                    'selesai' => 'bg-secondary',
+                                    'menunggu' => 'bg-warning text-dark',
+                                    'ditolak' => 'bg-danger',
+                                    default => 'bg-secondary'
+                                };
+                            @endphp
+                            <span class="badge {{ $statusClass }}">
                                 {{ ucfirst($s->status_sewa) }}
                             </span>
                         </td>
                         <td>
-                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEdit{{ $s->id_sewa }}">Edit</button>
-                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalHapus{{ $s->id_sewa }}">Hapus</button>
+                            @if($s->status_sewa == 'menunggu')
+                                <form action="{{ route('sewa.approve', $s->id_sewa) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                </form>
+                                <form action="{{ route('sewa.reject', $s->id_sewa) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                            @else
+                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEdit{{ $s->id_sewa }}">Edit</button>
+                                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalHapus{{ $s->id_sewa }}">Hapus</button>
+                            @endif
                         </td>
                     </tr>
 
@@ -94,7 +112,6 @@
                                                 @endforeach
                                             </select>
                                         </div>
-
                                         <div class="mb-3">
                                             <label>Kontrakan</label>
                                             <select name="id_kontrakan" class="form-control" required>
@@ -105,22 +122,21 @@
                                                 @endforeach
                                             </select>
                                         </div>
-
                                         <div class="mb-3">
                                             <label>Tanggal Mulai</label>
                                             <input type="date" name="tgl_mulai" class="form-control" value="{{ $s->tgl_mulai }}" required>
                                         </div>
-
                                         <div class="mb-3">
                                             <label>Tanggal Selesai</label>
                                             <input type="date" name="tgl_selesai" class="form-control" value="{{ $s->tgl_selesai }}" required>
                                         </div>
-
                                         <div class="mb-3">
                                             <label>Status</label>
                                             <select name="status_sewa" class="form-control" required>
                                                 <option value="aktif" {{ $s->status_sewa == 'aktif' ? 'selected' : '' }}>Aktif</option>
                                                 <option value="selesai" {{ $s->status_sewa == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                                <option value="menunggu" {{ $s->status_sewa == 'menunggu' ? 'selected' : '' }}>Menunggu</option>
+                                                <option value="ditolak" {{ $s->status_sewa == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                                             </select>
                                         </div>
                                     </div>
@@ -160,7 +176,7 @@
 
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted">Tidak ada data ditemukan.</td>
+                        <td colspan="8" class="text-center text-muted">Tidak ada data ditemukan.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -196,7 +212,6 @@
                             @endforeach
                         </select>
                     </div>
-
                     <div class="mb-3">
                         <label>Kontrakan</label>
                         <select name="id_kontrakan" class="form-control" required>
@@ -208,22 +223,20 @@
                             @endforeach
                         </select>
                     </div>
-
                     <div class="mb-3">
                         <label>Tanggal Mulai</label>
                         <input type="date" name="tgl_mulai" class="form-control" required>
                     </div>
-
                     <div class="mb-3">
                         <label>Tanggal Selesai</label>
                         <input type="date" name="tgl_selesai" class="form-control" required>
                     </div>
-
                     <div class="mb-3">
                         <label>Status</label>
                         <select name="status_sewa" class="form-control" required>
                             <option value="aktif">Aktif</option>
                             <option value="selesai">Selesai</option>
+                            <option value="menunggu">Menunggu</option>
                         </select>
                     </div>
                 </div>
@@ -236,7 +249,7 @@
     </div>
 </div>
 
-<!-- ✅ VALIDASI JAVASCRIPT -->
+<!-- ✅ Validasi JS -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const kontrakanAktif = @json($kontrakanAktif);

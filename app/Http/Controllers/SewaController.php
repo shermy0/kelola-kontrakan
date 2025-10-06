@@ -39,36 +39,38 @@ class SewaController extends Controller
             'id_kontrakan' => 'required|exists:kontrakan,id_kontrakan',
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
-            'status_sewa' => 'required|in:aktif,selesai',
+            'status_sewa' => 'required|in:aktif,selesai,menunggu,ditolak',
         ], [
             'tgl_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.'
         ]);
 
         // Cek sewa aktif ganda
-        $kontrakanAktif = Sewa::where('id_kontrakan', $request->id_kontrakan)
-            ->where('status_sewa', 'aktif')
-            ->exists();
+        if ($request->status_sewa === 'aktif') {
+            $kontrakanAktif = Sewa::where('id_kontrakan', $request->id_kontrakan)
+                ->where('status_sewa', 'aktif')
+                ->exists();
 
-        $penyewaAktif = Sewa::where('id_penyewa', $request->id_penyewa)
-            ->where('status_sewa', 'aktif')
-            ->exists();
+            $penyewaAktif = Sewa::where('id_penyewa', $request->id_penyewa)
+                ->where('status_sewa', 'aktif')
+                ->exists();
 
-        if ($kontrakanAktif && $request->status_sewa === 'aktif') {
-            return redirect()->back()->with('error', 'Kontrakan ini sudah memiliki sewa aktif!');
+            if ($kontrakanAktif) {
+                return redirect()->back()->with('error', 'Kontrakan ini sudah memiliki sewa aktif!');
+            }
+
+            if ($penyewaAktif) {
+                return redirect()->back()->with('error', 'Penyewa ini sudah memiliki sewa aktif!');
+            }
         }
 
-        if ($penyewaAktif && $request->status_sewa === 'aktif') {
-            return redirect()->back()->with('error', 'Penyewa ini sudah memiliki sewa aktif!');
-        }
-
-        // Simpan data sewa baru
         $sewa = Sewa::create($request->all());
 
         // 🔄 Update status kontrakan otomatis
+        $kontrakan = Kontrakan::find($request->id_kontrakan);
         if ($request->status_sewa === 'aktif') {
-            Kontrakan::find($request->id_kontrakan)->update(['status' => 'terisi']);
+            $kontrakan->update(['status' => 'terisi']);
         } else {
-            Kontrakan::find($request->id_kontrakan)->update(['status' => 'kosong']);
+            $kontrakan->update(['status' => 'kosong']);
         }
 
         return redirect()->route('sewa.index')->with('success', 'Data sewa berhasil ditambahkan.');
@@ -81,7 +83,7 @@ class SewaController extends Controller
             'id_kontrakan' => 'required|exists:kontrakan,id_kontrakan',
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
-            'status_sewa' => 'required|in:aktif,selesai',
+            'status_sewa' => 'required|in:aktif,selesai,menunggu,ditolak',
         ], [
             'tgl_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.'
         ]);
@@ -109,15 +111,14 @@ class SewaController extends Controller
             }
         }
 
-        // Update data sewa
         $sewa->update($request->all());
 
-        //  Update status kontrakan otomatis
+        // 🔄 Update status kontrakan otomatis
         $kontrakan = Kontrakan::find($request->id_kontrakan);
         if ($request->status_sewa === 'aktif') {
             $kontrakan->update(['status' => 'terisi']);
         } else {
-            $kontrakan->update(['status' => 'kosong']);
+            $kontrakan->update(['status' => 'kosong']); // termasuk ditolak, selesai, menunggu
         }
 
         return redirect()->route('sewa.index')->with('success', 'Data sewa berhasil diperbarui.');
@@ -135,5 +136,38 @@ class SewaController extends Controller
         $sewa->delete();
 
         return redirect()->route('sewa.index')->with('success', 'Data sewa berhasil dihapus.');
+    }
+
+    public function approve($id)
+    {
+        $sewa = Sewa::findOrFail($id);
+
+        // Cek sewa aktif ganda
+        if (Sewa::where('id_kontrakan', $sewa->id_kontrakan)->where('status_sewa', 'aktif')->exists() ||
+            Sewa::where('id_penyewa', $sewa->id_penyewa)->where('status_sewa', 'aktif')->exists()) {
+            return redirect()->back()->with('error', 'Kontrakan atau Penyewa sudah memiliki sewa aktif!');
+        }
+
+        $sewa->status_sewa = 'aktif';
+        $sewa->save();
+
+        // Update status kontrakan
+        $kontrakan = $sewa->kontrakan;
+        $kontrakan->update(['status' => 'terisi']);
+
+        return redirect()->back()->with('success', 'Sewa berhasil di-approve.');
+    }
+
+    public function reject($id)
+    {
+        $sewa = Sewa::findOrFail($id);
+        $sewa->status_sewa = 'ditolak';
+        $sewa->save();
+
+        // Update status kontrakan
+        $kontrakan = $sewa->kontrakan;
+        $kontrakan->update(['status' => 'kosong']);
+
+        return redirect()->back()->with('success', 'Sewa berhasil di-reject.');
     }
 }

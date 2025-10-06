@@ -25,6 +25,13 @@ Route::middleware(['auth', 'role:penyewa'])->group(function () {
     Route::post('/ajukan-sewa', [AjukanSewaController::class, 'store'])->name('sewa.ajukan');
 });
 
+// CRUD Sewa
+Route::resource('sewa', SewaController::class);
+
+// Route khusus approve/reject
+Route::post('/sewa/{id}/approve', [SewaController::class, 'approve'])->name('sewa.approve');
+Route::post('/sewa/{id}/reject', [SewaController::class, 'reject'])->name('sewa.reject');
+
 
 
 Route::get('/pengelola/dashboard', function () {

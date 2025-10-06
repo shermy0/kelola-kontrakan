@@ -115,8 +115,12 @@
                             <td>
                                 @if($s->status_sewa == 'aktif')
                                     <span class="badge bg-success">Aktif</span>
-                                @else
+                                @elseif($s->status_sewa == 'menunggu')
+                                    <span class="badge bg-warning text-dark">Menunggu</span>
+                                @elseif($s->status_sewa == 'selesai')
                                     <span class="badge bg-secondary">Selesai</span>
+                                @elseif($s->status_sewa == 'ditolak')
+                                    <span class="badge bg-danger">Ditolak</span>
                                 @endif
                             </td>
                         </tr>

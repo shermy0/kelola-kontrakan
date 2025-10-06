@@ -47,7 +47,7 @@ class AjukanSewaController extends Controller  // <-- pastikan extend Controller
             'id_kontrakan' => $request->id_kontrakan,
             'tgl_mulai'    => now()->format('Y-m-d'),
             'tgl_selesai'  => now()->addMonth()->format('Y-m-d'),
-            'status_sewa'  => 'aktif',
+            'status_sewa'  => 'menunggu',
         ]);
 
         $kontrakan = Kontrakan::find($request->id_kontrakan);
