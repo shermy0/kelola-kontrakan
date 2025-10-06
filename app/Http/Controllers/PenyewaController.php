@@ -7,11 +7,24 @@ use Illuminate\Http\Request;
 
 class PenyewaController extends Controller
 {
-    public function index()
-    {
-        $penyewa = Penyewa::all();
-        return view('penyewa.index', compact('penyewa'));
+   public function index(Request $request)
+{
+    $query = Penyewa::query();
+
+    // ✅ Fitur pencarian
+    if ($request->has('search') && $request->search != '') {
+        $search = $request->search;
+        $query->where('nama_lengkap', 'like', "%{$search}%")
+              ->orWhere('no_telepon', 'like', "%{$search}%")
+              ->orWhere('nik', 'like', "%{$search}%")
+              ->orWhere('alamat', 'like', "%{$search}%");
     }
+
+    // ✅ Pagination (5 data per halaman)
+    $penyewa = $query->paginate(5)->appends(['search' => $request->search]);
+
+    return view('penyewa.index', compact('penyewa'));
+}
 
     public function create()
     {

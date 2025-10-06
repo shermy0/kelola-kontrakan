@@ -6,6 +6,8 @@ use App\Http\Controllers\PenyewaController;
 use App\Http\Controllers\SewaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AjukanSewaController;
+
 
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -17,6 +19,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/admin/dashboard', [DashboardController::class, 'admin'])
     ->name('dashboard.admin')
     ->middleware(['auth', 'role:admin']);
+
+Route::middleware(['auth', 'role:penyewa'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'penyewa'])->name('dashboard.penyewa');
+    Route::post('/ajukan-sewa', [AjukanSewaController::class, 'store'])->name('sewa.ajukan');
+});
+
+
 
 Route::get('/pengelola/dashboard', function () {
     return view('dashboard_pengelola');

@@ -14,4 +14,9 @@ class Penyewa extends Model
     {
         return $this->hasMany(Sewa::class, 'id_penyewa');
     }
+    public function user()
+{
+    return $this->belongsTo(User::class, 'id_penyewa', 'id');
+}
+
 }

@@ -19,16 +19,39 @@
     @endif
 
     {{-- Menu untuk Pengelola --}}
-    @if(auth()->user()->role === 'pengelola')
-        <a href="{{ route('dashboard.pengelola') }}">Dashboard Pengelola</a>
-        <a href="{{ route('kontrakan.index') }}">Kontrakan</a>
-        <a href="{{ route('sewa.index') }}">Sewa</a>
+    @if(auth()->user()->role === 'penyewa')
+        <a href="{{ route('dashboard.penyewa') }}">Dashboard Penyewa</a>
     @endif
 
     {{-- Logout --}}
     <form action="{{ route('logout') }}" method="POST" class="m-2">
         @csrf
-        <button type="submit" class="btn btn-danger w-100">Logout</button>
+{{-- Logout --}}
+<button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#logoutModal">
+    Logout
+</button>
+
+<!-- Modal Konfirmasi Logout -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="logoutModalLabel">Konfirmasi Logout</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        Apakah Anda yakin ingin logout?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-danger">Ya, Logout</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
     </form>
 </div>
 

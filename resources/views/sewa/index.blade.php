@@ -9,7 +9,7 @@
         + Tambah Sewa
     </button>
 
-    <!-- ✅ Validasi dari Controller -->
+    <!-- ✅ Alert -->
     @if($errors->any())
         <div class="alert alert-danger">
             <strong>Terjadi kesalahan:</strong>
@@ -21,16 +21,28 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <!-- Tabel Sewa -->
+    <!-- 🔍 Form Pencarian -->
+    <form method="GET" action="{{ route('sewa.index') }}" class="d-flex mb-3">
+        <input type="text" name="search" class="form-control me-2" placeholder="Cari penyewa atau unit..."
+               value="{{ request('search') }}">
+        <button type="submit" class="btn btn-primary">Cari</button>
+    </form>
+
+    <!-- 🧾 Tabel Data -->
     <div class="card shadow-sm rounded">
         <div class="card-body">
             <table class="table table-bordered table-striped align-middle">
                 <thead class="table-pink">
                     <tr>
+                        <th>No</th>
                         <th>ID</th>
                         <th>Penyewa</th>
                         <th>Kontrakan</th>
@@ -41,8 +53,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($sewa as $s)
+                    @forelse($sewa as $s)
                     <tr>
+                        <td>{{ $loop->iteration }}</td>
                         <td>{{ $s->id_sewa }}</td>
                         <td>{{ $s->penyewa->nama_lengkap }}</td>
                         <td>Unit {{ $s->kontrakan->nomor_unit }}</td>
@@ -54,16 +67,8 @@
                             </span>
                         </td>
                         <td>
-                            <button class="btn btn-warning btn-sm"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalEdit{{ $s->id_sewa }}">
-                                Edit
-                            </button>
-                            <button class="btn btn-danger btn-sm"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalHapus{{ $s->id_sewa }}">
-                                Hapus
-                            </button>
+                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEdit{{ $s->id_sewa }}">Edit</button>
+                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalHapus{{ $s->id_sewa }}">Hapus</button>
                         </td>
                     </tr>
 
@@ -83,8 +88,7 @@
                                             <label>Penyewa</label>
                                             <select name="id_penyewa" class="form-control" required>
                                                 @foreach($penyewa as $p)
-                                                    <option value="{{ $p->id_penyewa }}" 
-                                                        {{ $s->id_penyewa == $p->id_penyewa ? 'selected' : '' }}>
+                                                    <option value="{{ $p->id_penyewa }}" {{ $s->id_penyewa == $p->id_penyewa ? 'selected' : '' }}>
                                                         {{ $p->nama_lengkap }}
                                                     </option>
                                                 @endforeach
@@ -95,8 +99,7 @@
                                             <label>Kontrakan</label>
                                             <select name="id_kontrakan" class="form-control" required>
                                                 @foreach($kontrakan as $k)
-                                                    <option value="{{ $k->id_kontrakan }}" 
-                                                        {{ $s->id_kontrakan == $k->id_kontrakan ? 'selected' : '' }}>
+                                                    <option value="{{ $k->id_kontrakan }}" {{ $s->id_kontrakan == $k->id_kontrakan ? 'selected' : '' }}>
                                                         Unit {{ $k->nomor_unit }}
                                                     </option>
                                                 @endforeach
@@ -106,17 +109,11 @@
                                         <div class="mb-3">
                                             <label>Tanggal Mulai</label>
                                             <input type="date" name="tgl_mulai" class="form-control" value="{{ $s->tgl_mulai }}" required>
-                                            @error('tgl_mulai')
-                                                <div class="text-danger small mt-1">{{ $message }}</div>
-                                            @enderror
                                         </div>
 
                                         <div class="mb-3">
                                             <label>Tanggal Selesai</label>
                                             <input type="date" name="tgl_selesai" class="form-control" value="{{ $s->tgl_selesai }}" required>
-                                            @error('tgl_selesai')
-                                                <div class="text-danger small mt-1">{{ $message }}</div>
-                                            @enderror
                                         </div>
 
                                         <div class="mb-3">
@@ -161,9 +158,18 @@
                         </div>
                     </div>
 
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Tidak ada data ditemukan.</td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
+
+            <!-- 📄 Pagination -->
+            <div class="d-flex justify-content-center mt-3">
+                {{ $sewa->links() }}
+            </div>
         </div>
     </div>
 </div>
@@ -183,8 +189,7 @@
                         <label>Penyewa</label>
                         <select name="id_penyewa" class="form-control" required>
                             @foreach($penyewa as $p)
-                                <option value="{{ $p->id_penyewa }}" 
-                                    {{ in_array($p->id_penyewa, $penyewaAktif) ? 'disabled' : '' }}>
+                                <option value="{{ $p->id_penyewa }}" {{ in_array($p->id_penyewa, $penyewaAktif) ? 'disabled' : '' }}>
                                     {{ $p->nama_lengkap }}
                                     {{ in_array($p->id_penyewa, $penyewaAktif) ? '(Sedang aktif)' : '' }}
                                 </option>
@@ -196,8 +201,7 @@
                         <label>Kontrakan</label>
                         <select name="id_kontrakan" class="form-control" required>
                             @foreach($kontrakan as $k)
-                                <option value="{{ $k->id_kontrakan }}" 
-                                    {{ in_array($k->id_kontrakan, $kontrakanAktif) ? 'disabled' : '' }}>
+                                <option value="{{ $k->id_kontrakan }}" {{ in_array($k->id_kontrakan, $kontrakanAktif) ? 'disabled' : '' }}>
                                     Unit {{ $k->nomor_unit }}
                                     {{ in_array($k->id_kontrakan, $kontrakanAktif) ? '(Sudah disewa)' : '' }}
                                 </option>
@@ -238,7 +242,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const kontrakanAktif = @json($kontrakanAktif);
     const penyewaAktif = @json($penyewaAktif);
 
-    // Validasi form Edit & Tambah
     document.querySelectorAll('.form-edit, .form-tambah').forEach(form => {
         form.addEventListener('submit', function(e) {
             let valid = true;

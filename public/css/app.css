@@ -5,7 +5,7 @@ body {
     color: #444;
 }
 
-h2, h5, h6 {
+h2, h5, h4, h6 {
     font-weight: 750;
     color: #ff9ac4;
 }
@@ -160,3 +160,7 @@ h2, h5, h6 {
     border-top-left-radius: 18px;
     border-top-right-radius: 18px;
 }
+.modal-body, .modal-title {
+    color: #222;
+}
+

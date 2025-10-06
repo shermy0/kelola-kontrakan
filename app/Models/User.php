@@ -9,6 +9,12 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    public function penyewa()
+{
+    return $this->hasOne(Penyewa::class, 'id_penyewa', 'id'); 
+    // id di users ↔ id_penyewa di tabel penyewa
+}
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 

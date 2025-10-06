@@ -7,11 +7,21 @@ use Illuminate\Http\Request;
 
 class KontrakanController extends Controller
 {
-    public function index()
-    {
-        $kontrakan = Kontrakan::all();
-        return view('kontrakan.index', compact('kontrakan'));
-    }
+    public function index(Request $request)
+{
+    $search = $request->input('search');
+
+    $kontrakan = Kontrakan::when($search, function ($query, $search) {
+        $query->where('nomor_unit', 'like', "%{$search}%")
+              ->orWhere('status', 'like', "%{$search}%")
+              ->orWhere('keterangan', 'like', "%{$search}%");
+    })
+    ->orderBy('id_kontrakan', 'asc')
+    ->paginate(5);
+
+    return view('kontrakan.index', compact('kontrakan'));
+}
+
 
     public function create()
     {
