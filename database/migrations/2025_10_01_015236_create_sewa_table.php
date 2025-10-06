@@ -15,7 +15,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_kontrakan');
             
             $table->date('tgl_mulai');
-            $table->date('tgl_selesai')->nullable();
+            $table->date('tgl_selesai');
             $table->enum('status_sewa', ['aktif', 'selesai'])->default('aktif');
             
             $table->timestamps();

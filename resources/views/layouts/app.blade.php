@@ -35,6 +35,7 @@
         <div class="content">
             @yield('content')
         </div>
+@stack('scripts')
 
 </body>
 <!-- Bootstrap Bundle with Popper -->
