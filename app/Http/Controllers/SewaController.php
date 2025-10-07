@@ -6,31 +6,42 @@ use App\Models\Sewa;
 use App\Models\Penyewa;
 use App\Models\Kontrakan;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class SewaController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = Sewa::with(['penyewa', 'kontrakan']);
+{
+    $today = Carbon::today();
 
-        // 🔍 Pencarian
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->whereHas('penyewa', function ($q) use ($search) {
-                $q->where('nama_lengkap', 'like', "%{$search}%");
-            })->orWhereHas('kontrakan', function ($q) use ($search) {
-                $q->where('nomor_unit', 'like', "%{$search}%");
-            });
-        }
+    $sewas = Sewa::where('status_sewa', 'aktif')
+                  ->whereDate('tgl_selesai', '<=', $today)
+                  ->get();
 
-        $sewa = $query->paginate(5)->appends(['search' => $request->search]);
-        $penyewaAktif = Sewa::where('status_sewa', 'aktif')->pluck('id_penyewa')->toArray();
-        $kontrakanAktif = Sewa::where('status_sewa', 'aktif')->pluck('id_kontrakan')->toArray();
-        $penyewa = Penyewa::all();
-        $kontrakan = Kontrakan::all();
+    foreach ($sewas as $s) {
+        $s->status_sewa = 'selesai';
+        $s->save();
 
-        return view('sewa.index', compact('sewa', 'penyewa', 'kontrakan', 'penyewaAktif', 'kontrakanAktif'));
+        // Update kontrakan jadi kosong
+        $s->kontrakan->update(['status' => 'kosong']);
     }
+
+    $query = Sewa::with(['penyewa', 'kontrakan']);
+
+    if ($request->has('search')) {
+        $search = $request->search;
+        $query->whereHas('penyewa', fn($q) => $q->where('nama_lengkap', 'like', "%{$search}%"))
+              ->orWhereHas('kontrakan', fn($q) => $q->where('nomor_unit', 'like', "%{$search}%"));
+    }
+
+    $sewa = $query->paginate(5)->appends(['search' => $request->search]);
+    $penyewaAktif = Sewa::where('status_sewa', 'aktif')->pluck('id_penyewa')->toArray();
+    $kontrakanAktif = Sewa::where('status_sewa', 'aktif')->pluck('id_kontrakan')->toArray();
+    $penyewa = Penyewa::all();
+    $kontrakan = Kontrakan::all();
+
+    return view('sewa.index', compact('sewa', 'penyewa', 'kontrakan', 'penyewaAktif', 'kontrakanAktif'));
+}
 
     public function store(Request $request)
     {

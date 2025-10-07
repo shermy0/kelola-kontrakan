@@ -55,4 +55,83 @@ class AjukanSewaController extends Controller  // <-- pastikan extend Controller
 
         return redirect()->back()->with('success', "Sewa untuk kontrakan {$kontrakan->nomor_unit} berhasil diajukan.");
     }
+
+    public function ajukan(Request $request)
+{
+    $request->validate([
+        'id_kontrakan' => 'required|exists:kontrakan,id_kontrakan',
+        'tgl_mulai' => 'required|date',
+        'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
+    ], [
+        'tgl_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.'
+    ]);
+
+    $userId = auth()->id();
+
+    $penyewa = Penyewa::where('id_penyewa', $userId)->first();
+
+    // Pastikan kontrakan masih kosong
+    $kontrakan = Kontrakan::findOrFail($request->id_kontrakan);
+    if ($kontrakan->status != 'kosong') {
+        return redirect()->back()->with('error', 'Kontrakan sudah tidak tersedia.');
+    }
+
+    Sewa::create([
+        'id_penyewa' => $penyewa->id_penyewa,
+        'id_kontrakan' => $request->id_kontrakan,
+        'tgl_mulai' => $request->tgl_mulai,
+        'tgl_selesai' => $request->tgl_selesai,
+        'status_sewa' => 'menunggu', // otomatis menunggu approval
+    ]);
+
+    return redirect()->back()->with('success', 'Sewa berhasil diajukan, menunggu persetujuan.');
+}
+
+// Edit tanggal sewa (oleh penyewa)
+public function updatePenyewa(Request $request, $id)
+{
+    $sewa = Sewa::where('id_sewa', $id)
+                 ->where('id_penyewa', auth()->id())
+                 ->firstOrFail();
+
+    if($sewa->status_sewa != 'menunggu') {
+        return redirect()->back()->with('error', 'Tidak dapat mengubah sewa yang sudah disetujui atau selesai.');
+    }
+
+    $request->validate([
+        'tgl_mulai' => 'required|date',
+        'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
+    ], [
+        'tgl_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.'
+    ]);
+
+    $sewa->update([
+        'tgl_mulai' => $request->tgl_mulai,
+        'tgl_selesai' => $request->tgl_selesai,
+    ]);
+
+    return redirect()->back()->with('success', 'Tanggal sewa berhasil diperbarui.');
+}
+
+// Batalkan ajukan sewa (oleh penyewa)
+public function batalPenyewa($id)
+{
+    $sewa = Sewa::where('id_sewa', $id)
+                 ->where('id_penyewa', auth()->id())
+                 ->firstOrFail();
+
+    if($sewa->status_sewa != 'menunggu') {
+        return redirect()->back()->with('error', 'Hanya sewa menunggu yang bisa dibatalkan.');
+    }
+
+    // Update kontrakan menjadi kosong lagi
+    $kontrakan = $sewa->kontrakan;
+    $kontrakan->update(['status' => 'kosong']);
+
+    $sewa->delete();
+
+    return redirect()->back()->with('success', 'Pengajuan sewa berhasil dibatalkan.');
+}
+
+
 }

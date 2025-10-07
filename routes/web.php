@@ -23,6 +23,8 @@ Route::get('/admin/dashboard', [DashboardController::class, 'admin'])
 Route::middleware(['auth', 'role:penyewa'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'penyewa'])->name('dashboard.penyewa');
     Route::post('/ajukan-sewa', [AjukanSewaController::class, 'store'])->name('sewa.ajukan');
+    Route::put('/sewa/updatePenyewa/{id}', [AjukanSewaController::class, 'updatePenyewa'])->name('sewa.updatePenyewa');
+    Route::delete('/sewa/batalPenyewa/{id}', [AjukanSewaController::class, 'batalPenyewa'])->name('sewa.batalPenyewa');
 });
 
 // CRUD Sewa
